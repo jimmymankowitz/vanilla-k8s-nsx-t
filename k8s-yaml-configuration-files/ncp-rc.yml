@@ -1,0 +1,79 @@
+# ConfigMap for ncp.ini
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nsx-ncp-config
+  labels:
+    version: v1
+data:
+  ncp.ini: |
+    [DEFAULT]
+    [coe]
+    cluster = kubernetes
+    [k8s]
+    apiserver_host_ip = 172.16.20.2
+    apiserver_host_port = 6443
+    ca_file = /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+    client_token_file = /var/run/secrets/kubernetes.io/serviceaccount/token    
+    [nsx_v3]
+    nsx_api_managers = 192.168.2.211
+    nsx_api_user = admin
+    nsx_api_password = Krok9vmware!
+    insecure = True
+    service_size = 'SMALL'
+    subnet_prefix = 27 
+    tier0_router = 2382765e-e319-43f1-91ef-6b7b44e21086
+    overlay_tz = 89c15676-b7ad-4fa5-b4cf-ee17c0374123
+    container_ip_blocks = fa2139ee-ecad-480e-8aff-e993b5885861
+    external_ip_pools = 1069da5e-9308-455f-be83-bf62b3d723c3
+    external_ip_pools_lb = 284acc2e-cc25-45f0-ad80-7010ec7473f7
+---
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  name: nsx-ncp
+  labels:
+    tier: nsx-networking
+    component: nsx-ncp
+    version: v1
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        tier: nsx-networking
+        component: nsx-ncp
+        version: v1
+    spec:
+      hostNetwork: true
+      containers:
+        - name: nsx-ncp
+          image: registry.local/2.3.2.11695762/nsx-ncp-ubuntu:latest 
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: NCP_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: NCP_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+          livenessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - check_pod_liveness nsx-ncp
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            failureThreshold: 5
+          volumeMounts:
+          - name: config-volume
+            mountPath: /etc/nsx-ujo/ncp.ini
+            subPath: ncp.ini
+            readOnly: true
+      volumes:
+        - name: config-volume
+          configMap:
+            name: nsx-ncp-config

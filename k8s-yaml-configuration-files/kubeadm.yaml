@@ -1,0 +1,6 @@
+apiVersion: kubeadm.k8s.io/v1alpha1
+kind: MasterConfiguration
+kubernetesVersion: v1.11.5
+api:
+  advertiseAddress: 172.16.20.2
+  bindPort: 6443
