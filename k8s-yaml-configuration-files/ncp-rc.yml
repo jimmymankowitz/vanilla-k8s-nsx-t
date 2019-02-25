@@ -18,7 +18,7 @@ data:
     [nsx_v3]
     nsx_api_managers = 192.168.2.211
     nsx_api_user = admin
-    nsx_api_password = Krok9vmware!
+    nsx_api_password = 
     insecure = True
     service_size = 'SMALL'
     subnet_prefix = 27 
